@@ -1,0 +1,30 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient('SUPABASE_URL', 'SUPABASE_KEY');
+
+// Hämta CSRF-token från servern efter inloggning
+async function getCsrfToken() {
+  const { data: { session } } = await supabase.auth.getSession();
+  const response = await fetch('/api/get-csrf-token', {
+    headers: {
+      Authorization: `Bearer ${session.access_token}`
+    }
+  });
+  const { csrfToken } = await response.json();
+  return csrfToken;
+}
+
+// Skicka ett skyddat API-anrop med CSRF-token
+async function makeProtectedRequest() {
+  const csrfToken = await getCsrfToken();
+  const response = await fetch('/api/protected-endpoint', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${supabase.auth.getSession().data.session.access_token}`,
+      'X-CSRF-Token': csrfToken
+    },
+    body: JSON.stringify({ someData: 'exempel' })
+  });
+  const result = await response.json();
+  console.log('Svar från skyddat anrop:', result);
+}
