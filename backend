@@ -1,0 +1,30 @@
+const express = require('express');
+const crypto = require('crypto');
+
+const app = express();
+app.use(express.json());
+
+// Generera CSRF-token
+app.get('/api/get-csrf-token', (req, res) => {
+  const csrfToken = crypto.randomBytes(32).toString('hex');
+  // Spara CSRF-token i en säker plats, t.ex. i en session eller databas
+  // Här förenklar vi och skickar bara tillbaka token
+  res.json({ csrfToken });
+});
+
+// Skyddat endpoint som kräver CSRF-token
+app.post('/api/protected-endpoint', (req, res) => {
+  const csrfToken = req.headers['x-csrf-token'];
+  // Validera CSRF-token (t.ex. jämför med lagrad token i databas eller session)
+  if (!csrfToken || !isValidCsrfToken(csrfToken)) {
+    return res.status(403).json({ error: 'Ogiltig CSRF-token' });
+  }
+  res.json({ message: 'Skyddat anrop lyckades' });
+});
+
+function isValidCsrfToken(token) {
+  // Implementera validering, t.ex. jämför med lagrad token
+  return true; // Förenklad, ersätt med riktig validering
+}
+
+app.listen(3000, () => console.log('Server körs på port 3000'));
